@@ -1,9 +1,13 @@
 # Google Summer of Code 2024
 
 **Project:** [Kubernetes Operator for Advanced  Container Checkpoint Management  ](https://summerofcode.withgoogle.com/programs/2024/projects/IqOsdIBz)
+
 **Organization:** [CRIU](https://criu.org)
+
 **Mentor:** [Adrian Reber](https://github.com/adrianreber), [Radostin Stoyanov](https://github.com/rst0git), [Prajwal S N](https://github.com/snprajwal)
-**Proposal:** [Parthiba Hazra - CRIU (GSoC 2024)](./Parthiba_Hazra-%20CRIU%20%28GSoC-2024%29.pdf)
+
+**Proposal:** [Parthiba Hazra - CRIU (GSoC 2024)](https://github.com/Parthiba-Hazra/gsoc-2024/blob/main/Parthiba%20Hazra%20-%20CRIU%20%28GSoC-2024%29.pdf)
+
 
 
 ----------
