@@ -14,28 +14,47 @@
 
 ## Overview
 
-Container checkpointing is a crucial feature within Kubernetes, facilitating state preservation for containers during operations such as live migration, fault recovery, and more. However, the current implementation lacks essential management functionalities, such as limiting the number of checkpoints and automating their cleanup, which can lead to resource exhaustion and operational challenges.
+Container checkpointing was recently introduced as a beta feature in Kubernetes, enabling use-cases such as live migration, fault recovery, and preemptive scheduling. However, the current implementation lacks essential management functionalities, such as limiting the number of checkpoints and automating their cleanup, which can lead to resource exhaustion and operational challenges.
 
-My project aimed to enhance the [Kubernetes operator](https://github.com/checkpoint-restore/checkpoint-restore-operator) by implementing advanced garbage collection policies tailored to various levels, including global, namespace, pod, and container-specific policies. These enhancements enable fine-grained control over checkpoint management, helping users prevent resource exhaustion and maintain operational efficiency within Kubernetes clusters. 
+This project aims to develop a [Kubernetes operator](https://github.com/checkpoint-restore/checkpoint-restore-operator) that provides support for this functionality. The checkpoint-restore operator allows users to specify a set of  policies that limit the number of checkpoints  at different levels, including global, namespace, pod, and container-specific policies. This functionality allows users to automatically discard obsolete checkpoints and provides users with fine-grained control for managing container checkpoints in Kubernetes clusters. 
 
-## Implementation
+## Implementation Details
 
 1.  **GitHub Actions Workflow for CI/CD**:  
-    Implemented a GitHub Actions workflow to automate the building and deployment of the `CheckpointRestoreOperator` to a Kind Kubernetes cluster. Verification workflows were added for linting and Go module checks, ensuring code quality and compliance with best practices.
+    Developing a GitHub Actions workflow  that automates the building, deployment, and testing of the CheckpointRestoreOperator in a Kubernetes cluster was crucial for verifying the functionality of the features implemented throughout this project. The verification workflows were extended with  additional linting and Go module checks that ensure code quality and compliance with best practices
     
 2.  **Count-Based Retention Policies**:  
-    Introduced global, container, pod, and namespace-level retention policies based on checkpoint count limits. Additionally, a flag `applyPoliciesImmediately` was introduced to allow for the immediate application of these policies.
+    The simplest method for limiting the number of checkpoints is by using a count-based retention policy that allows users to specify a threshold at global, namespace, pod, or container level. This functionality was implemented with custom resource definition (CRD) that allows to specify a limit for the number of checkpoints at a particular level. For example, the following policy would limit the maximum number of checkpoints per namespace, pod and container to 50, 30 and 10, respectively.
+    ```yaml
+    globalPolicy:
+        maxCheckpointsPerNamespace: 50
+        maxCheckpointsPerPod: 30
+        maxCheckpointsPerContainer: 10
+    ```
+    This policy is automatically applied when a new checkpoint has been created. , Alternatively, the following flag  can be used to apply the policy with immediate effect:
+    ```
+        applyPoliciesImmediately: true
+    ```
     
 3.  **Storage-Based Retention Policies**:  
-    Developed storage/size-based retention policies at the global, container, pod, and namespace levels. These policies allow users to define both the maximum size of individual checkpoints (`maxCheckpointSize`) and the total size of all checkpoints associated with a resource (`maxTotalSizePerContainer`).
+    While limiting the number of checkpoints is useful, each checkpoint can have different size depending on size of the memory, rootfs diff, and other runtime state the container has. To address this problem, we developed a mechanism that allows users to specify size-based retention policies. These policies can be applied at global, namespace,, pod, and container level, similar to the count-based policy. This functionality allows users to define both the maximum size of individual checkpoints (`maxCheckpointSize`) and the total size of all checkpoints associated with a resource (`maxTotalSizePerContainer`).
+
+
+    ```yaml
+    globalPolicy:
+        maxCheckpointSize: 10
+        maxTotalSizePerNamespace: 1000
+        maxTotalSizePerPod: 500
+        maxTotalSizePerContainer: 100
+    ```
     
 4.  **Orphan Checkpoint Retention Policy**:  
-    Implemented an orphan checkpoint retention policy that gives users control over whether orphaned checkpoints—those associated with deleted resources—should be retained or deleted.
-    
-5.  **Documentation**:  
-    Comprehensive documentation for the checkpoint retention policies was added. [Docs](https://github.com/checkpoint-restore/checkpoint-restore-operator/blob/main/docs/retention_policy.md)
+    In addition to count-based and storage-based policies, the checkpoint-restore operator has been extended with orphan checkpoint retention policy that allows users to enable for checkpoints associated with deleted Pods to be automatically removed. This functionality introduces a Pod watcher that handles delete events and allows  users to control  whether orphaned checkpoints—those associated with deleted resources—should be retained or deleted.
+    ```yaml
+    retainOrphan: false
+    ```
 
-### Challenges
+### Challenges and Lessons Learned
 
 1.  **Policy Priority Mechanism**:  
     So, imagine you’re trying to enforce rules at different levels in Kubernetes (like container, pod, namespace, and global), but there’s a twist—these rules can’t all happen at once without stepping on each other’s toes. Enter the policy priority mechanism! We had to make sure that the most specific rules (like container-level) would win out over broader ones (like global-level). It was like setting up a game of rock-paper-scissors where container beats pod, pod beats namespace, and so on. It took some brain power, but we managed to get these policies to play nice with each other.
@@ -57,7 +76,9 @@ Picture this: you’ve got your operator ready to roll, but now you need to pull
 -   [`checkpoint-restore-operator#28`  Add orphan checkpoint retention policy](https://github.com/checkpoint-restore/checkpoint-restore-operator/pull/28)
 
 ## Future Work
-In the future, we plan to implement a `time-based` checkpoint retention policy as outlined in the original proposal. This feature will allow users to set time thresholds for checkpoint retention, automatically deleting checkpoints that exceed the defined age limit. 
+1. **Time-Based Checkpoint Retention Policy:** We will introduce a time-based retention policy that allows users to define time thresholds for checkpoint retention. This policy will automatically delete checkpoints that exceed the specified age limit, providing a more flexible and automated cleanup mechanism.
+
+2. **Extended Storage Parameter Support:** Currently, the storage parameter in the checkpoint retention policy only supports values in megabytes (MB). We plan to extend this functionality to support various units, similar to Kubernetes resource limits. Users will be able to specify storage limits using suffixes like E, P, T, G, M, k, as well as their power-of-two equivalents (Ei, Pi, Ti, Gi, Mi, Ki). This will provide more granular control over storage resource management in the operator. 
 
 ## Acknowledgements
 I would like to express my deepest gratitude to my mentors, Adrian Reber, Radostin Stoyanov, and Prajwal S N, for their unwavering support and guidance throughout this journey. Their invaluable resources, constructive reviews, and timely advice helped me navigate the project and the GSoC process with confidence. I’m also thankful to the GSoC team for their continuous guidance, making this journey smooth and enriching.
