@@ -32,7 +32,7 @@ This project aims to develop a [Kubernetes operator](https://github.com/checkpoi
         maxCheckpointsPerContainer: 10
     ```
     This policy is automatically applied when a new checkpoint has been created. , Alternatively, the following flag  can be used to apply the policy with immediate effect:
-    ```
+    ```yaml
         applyPoliciesImmediately: true
     ```
     
