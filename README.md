@@ -21,7 +21,7 @@ This project aims to develop a [Kubernetes operator](https://github.com/checkpoi
 ## Implementation Details
 
 1.  **GitHub Actions Workflow for CI/CD**:  
-    Developing a GitHub Actions workflow  that automates the building, deployment, and testing of the CheckpointRestoreOperator in a Kubernetes cluster was crucial for verifying the functionality of the features implemented throughout this project. The verification workflows were extended with  additional linting and Go module checks that ensure code quality and compliance with best practices
+    Developing a GitHub Actions workflow  that automates the building, deployment, and testing of the CheckpointRestoreOperator in a Kubernetes cluster was crucial for verifying the functionality of the features implemented throughout this project. The verification workflows were extended with  additional linting and Go module checks that ensure code quality and compliance with best practices.
     
 2.  **Count-Based Retention Policies**:  
     The simplest method for limiting the number of checkpoints is by using a count-based retention policy that allows users to specify a threshold at global, namespace, pod, or container level. This functionality was implemented with custom resource definition (CRD) that allows to specify a limit for the number of checkpoints at a particular level. For example, the following policy would limit the maximum number of checkpoints per namespace, pod and container to 50, 30 and 10, respectively.
@@ -51,7 +51,7 @@ This project aims to develop a [Kubernetes operator](https://github.com/checkpoi
 4.  **Orphan Checkpoint Retention Policy**:  
     In addition to count-based and storage-based policies, the checkpoint-restore operator has been extended with orphan checkpoint retention policy that allows users to enable for checkpoints associated with deleted Pods to be automatically removed. This functionality introduces a Pod watcher that handles delete events and allows  users to control  whether orphaned checkpoints—those associated with deleted resources—should be retained or deleted.
     ```yaml
-    retainOrphan: false
+    retainOrphan: false  # Checkpoints will be deleted if the resource is deleted from the cluster.
     ```
 
 ### Challenges and Lessons Learned
